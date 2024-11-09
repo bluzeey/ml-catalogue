@@ -57,11 +57,14 @@ graphql
 │   └── server.ts                     # Server setup
 ├── data
 │   └── trustradius-ml.csv            # CSV data file (example)
-└── package.json```
+└── package.json
+
+```
 
 Frontend
 
-```frontend/
+```
+frontend/
 ├── components
 │   ├── SearchForm.tsx                # Search form component
 │   └── PlatformSummary.tsx           # Displays platform summaries
@@ -70,7 +73,8 @@ Frontend
 ├── styles
 │   └── globals.css                   # Global styles with Tailwind CSS
 ├── .env.local                        # Frontend environment variables
-└── package.json```
+└── package.json
+```
 
 Getting Started
 Prerequisites
