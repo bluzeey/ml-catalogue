@@ -83,14 +83,10 @@ npm
 Installation
 Clone the repository:
 
-bash
-Copy code
 git clone https://github.com/your-username/ai-ml-platform-catalog.git
 cd ai-ml-platform-catalog
 Install dependencies for both backend and frontend:
 
-bash
-Copy code
 # Install backend dependencies
 cd backend
 npm install
@@ -132,17 +128,27 @@ Example Request
 http
 GET http://localhost:8000/api/search?query=AI21+Jurassic&file=trustradius-ml.csv
 ```
-### Best Practices Followed
-Modular Code Structure: Divided responsibilities into separate files for easy maintenance and scalability (e.g., services for OpenAI, CSV, Reddit).
-Environment Variables: Used dotenv to secure sensitive information (e.g., API keys).
-TypeScript: Provided strict typing for better code readability and reduced runtime errors.
-Error Handling: Implemented try-catch blocks to gracefully handle errors, especially with external API requests.
-Responsive UI: Used Tailwind CSS for a responsive design that adapts to different screen sizes.
-ShadCN: Ensured a consistent and accessible UI experience across components.
+## Best Practices Followed
 
+- **Modular Code Structure**: Divided responsibilities into separate files for easy maintenance and scalability, such as creating dedicated services for handling OpenAI, CSV, and Reddit functionalities.
+
+- **Environment Variables**: Utilized `dotenv` to manage sensitive information like API keys securely, enhancing both security and configurability.
+
+- **TypeScript**: Employed strict typing to improve code readability and reduce runtime errors, ensuring more robust development.
+
+- **Error Handling**: Incorporated `try-catch` blocks to handle errors gracefully, particularly for external API requests, providing a more resilient application.
+
+- **Responsive UI**: Implemented a responsive design using Tailwind CSS, allowing the interface to adapt seamlessly to various screen sizes.
+
+- **ShadCN**: Ensured a consistent, accessible user interface across all components, enhancing the user experience for diverse audiences.
 
 ## Future Enhancements
-Add Pagination: Implement pagination to handle larger datasets more efficiently.
-Caching: Cache frequently accessed CSV data to reduce filesystem operations.
-Advanced Filtering: Allow users to filter results based on multiple criteria like industry or pricing.
-Testing: Add unit and integration tests for improved code reliability.
+
+- **Pagination**: Implement pagination to manage larger datasets more efficiently, improving both load times and user experience.
+
+- **Caching**: Cache frequently accessed CSV data to reduce filesystem operations, enhancing performance for repeat queries.
+
+- **Advanced Filtering**: Introduce filters that allow users to refine results based on multiple criteria, such as industry or pricing, for a more tailored search experience.
+
+- **Testing**: Add unit and integration tests to improve code reliability and ensure that components function correctly under various conditions.
+
