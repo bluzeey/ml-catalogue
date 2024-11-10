@@ -88,13 +88,10 @@ cd ai-ml-platform-catalog
 Install dependencies for both backend and frontend:
 
 # Install backend dependencies
+```
 cd backend
 npm install
 
-# Install frontend dependencies
-```
-cd ../frontend
-npm install
 Environment Variables
 Backend
 Create a .env file in the backend directory with the following variables:
@@ -102,6 +99,25 @@ OPENAI_API_KEY=your_openai_api_key
 GOOGLE_CUSTOM_SEARCH_CX=your_google_cx_id
 SERP_API_KEY=your_google_api_key
 PORT=8000
+
+
+API Endpoints (Backend)
+GET /api/search
+Searches for a platform by name, fetches relevant data from the CSV file, and generates a summary using OpenAI. If available, includes Reddit reviews.
+
+Query Parameters
+query: (string) Name of the platform.
+file: (string) CSV file name (e.g., trustradius-ml.csv).
+Example Request
+http
+GET http://localhost:8000/api/search?query=AI21+Jurassic&file=trustradius-ml.csv
+```
+
+# Install frontend dependencies
+```
+cd ../frontend
+npm install
+
 Frontend
 Create a .env.local file in the frontend directory with the backend URL:
 
@@ -117,16 +133,6 @@ Frontend: Start the frontend development server by navigating to the frontend fo
 npm run dev
 The frontend should now be accessible on http://localhost:3000.
 
-API Endpoints (Backend)
-GET /api/search
-Searches for a platform by name, fetches relevant data from the CSV file, and generates a summary using OpenAI. If available, includes Reddit reviews.
-
-Query Parameters
-query: (string) Name of the platform.
-file: (string) CSV file name (e.g., trustradius-ml.csv).
-Example Request
-http
-GET http://localhost:8000/api/search?query=AI21+Jurassic&file=trustradius-ml.csv
 ```
 ## Best Practices Followed
 
