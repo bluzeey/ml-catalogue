@@ -96,14 +96,12 @@ cd backend
 npm install
 
 # Install frontend dependencies
+```
 cd ../frontend
 npm install
 Environment Variables
 Backend
 Create a .env file in the backend directory with the following variables:
-
-plaintext
-Copy code
 OPENAI_API_KEY=your_openai_api_key
 GOOGLE_CUSTOM_SEARCH_CX=your_google_cx_id
 SERP_API_KEY=your_google_api_key
@@ -111,21 +109,15 @@ PORT=8000
 Frontend
 Create a .env.local file in the frontend directory with the backend URL:
 
-plaintext
-Copy code
 NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 Running the Application
 Backend: Start the backend server by navigating to the backend folder and running:
 
-bash
-Copy code
 npm run start
 The server should now be running on http://localhost:8000.
 
 Frontend: Start the frontend development server by navigating to the frontend folder and running:
 
-bash
-Copy code
 npm run dev
 The frontend should now be accessible on http://localhost:3000.
 
@@ -138,16 +130,18 @@ query: (string) Name of the platform.
 file: (string) CSV file name (e.g., trustradius-ml.csv).
 Example Request
 http
-Copy code
 GET http://localhost:8000/api/search?query=AI21+Jurassic&file=trustradius-ml.csv
-Best Practices Followed
+```
+### Best Practices Followed
 Modular Code Structure: Divided responsibilities into separate files for easy maintenance and scalability (e.g., services for OpenAI, CSV, Reddit).
 Environment Variables: Used dotenv to secure sensitive information (e.g., API keys).
 TypeScript: Provided strict typing for better code readability and reduced runtime errors.
 Error Handling: Implemented try-catch blocks to gracefully handle errors, especially with external API requests.
 Responsive UI: Used Tailwind CSS for a responsive design that adapts to different screen sizes.
 ShadCN: Ensured a consistent and accessible UI experience across components.
-Future Enhancements
+
+
+## Future Enhancements
 Add Pagination: Implement pagination to handle larger datasets more efficiently.
 Caching: Cache frequently accessed CSV data to reduce filesystem operations.
 Advanced Filtering: Allow users to filter results based on multiple criteria like industry or pricing.
