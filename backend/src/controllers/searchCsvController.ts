@@ -12,7 +12,7 @@ dotenv.config();
 // Initialize OpenAI model with LangChain
 const openai = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
-  model: "gpt-4", // Specify the OpenAI model
+  model: "gpt-4o-mini", // Specify the OpenAI model
   streaming: true, // Enable streaming
 });
 
@@ -40,6 +40,7 @@ export const searchCsvController = async (req: Request, res: Response) => {
     const intentChain = intentPrompt.pipe(openai).pipe(intentParser);
     const intentResponse = await intentChain.invoke({ query });
     let intent = intentResponse.trim();
+    console.log(intent);
 
     // Step 2: Load CSV data
     const loader = new CSVLoader(`./data/merged_ratings.csv`);

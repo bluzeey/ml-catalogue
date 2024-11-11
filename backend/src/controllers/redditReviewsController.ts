@@ -27,7 +27,7 @@ export async function fetchRedditLinks(query: string): Promise<string[]> {
         ?.filter((item) => item.link && item.link.includes("reddit.com"))
         .map((item) => item.link as string) || [];
 
-    return redditLinks.slice(0, 1);
+    return redditLinks.slice(0, 3);
   } catch (error) {
     console.error("Error fetching Reddit links:", error);
     return [];
@@ -41,12 +41,24 @@ export async function summarizeRedditContent(urls: string[]): Promise<string> {
   for (const url of urls) {
     try {
       const redditData = await axios.get(`${url}.json`);
-      const comments = redditData.data[1].data.children
-        .map((child: any) => child.data.body)
-        .slice(0, 3)
-        .join("\n");
 
-      combinedContent += comments + "\n";
+      // Check if the response has the correct structure
+      if (
+        redditData.data &&
+        redditData.data[1] &&
+        redditData.data[1].data &&
+        Array.isArray(redditData.data[1].data.children)
+      ) {
+        const comments = redditData.data[1].data.children
+          .map((child: any) => child.data.body)
+          .filter(Boolean) // Ensure non-empty comments
+          .slice(0, 5)
+          .join("\n");
+
+        combinedContent += comments + "\n";
+      } else {
+        console.warn(`Unexpected response structure for URL: ${url}`);
+      }
     } catch (error) {
       console.error(`Error fetching comments from ${url}:`, error);
     }

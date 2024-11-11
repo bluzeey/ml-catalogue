@@ -18,9 +18,7 @@ export default function Hero() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/search?query=${encodeURIComponent(
-          searchQuery
-        )}&file=trustradius-ml.csv`
+        `http://localhost:8000/api/search?query=${searchQuery}`
       );
 
       if (!response.ok) {
