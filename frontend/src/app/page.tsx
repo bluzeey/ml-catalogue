@@ -14,16 +14,6 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
-interface PlatformData {
-  name: string;
-  features: string;
-  differentiators: string;
-  industries: string;
-  pricing: string;
-  deployment: string;
-  reviews: string;
-}
-
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [streamingContent, setStreamingContent] = useState("");
@@ -64,13 +54,20 @@ export default function Home() {
           const chunk = buffer.slice(0, boundary);
           buffer = buffer.slice(boundary + 2);
 
+          // Check if the chunk indicates completion
+          if (chunk.trim() === "data: [DONE]") {
+            setLoading(false);
+            return;
+          }
+
+          // Process valid JSON data chunks
           if (chunk.startsWith("data: ")) {
-            const jsonData = JSON.parse(chunk.slice(5));
-            if (jsonData.content === "[DONE]" || jsonData.content === "D") {
-              setLoading(false);
-              return;
+            try {
+              const jsonData = JSON.parse(chunk.slice(5));
+              setStreamingContent((prev) => prev + jsonData.content);
+            } catch (error) {
+              console.error("Error parsing JSON:", error);
             }
-            setStreamingContent((prev) => prev + jsonData.content);
           }
         }
       }

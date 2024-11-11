@@ -1,32 +1,98 @@
 // searchCsvController.ts
 import { Request, Response } from "express";
-import csvService from "../services/csvService";
+import { CSVLoader } from "@langchain/community/document_loaders/fs/csv";
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 import { fetchAndSummarizeRedditReviews } from "../controllers/redditReviewsController";
-import OpenAI from "openai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const openai = new OpenAI({
+// Initialize OpenAI model with LangChain
+const openai = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
+  model: "gpt-4", // Specify the OpenAI model
+  streaming: true, // Enable streaming
 });
 
 export const searchCsvController = async (req: Request, res: Response) => {
-  const { query, file } = req.query;
+  const { query } = req.query;
 
-  if (typeof query !== "string" || typeof file !== "string") {
-    return res
-      .status(400)
-      .json({ error: "Query and file parameters are required" });
+  if (typeof query !== "string") {
+    return res.status(400).json({ error: "Query parameter is required" });
   }
 
   try {
-    const filePath = `./data/${file}`;
-    const platformData = await csvService.findByName(query, filePath);
+    // Step 1: Classify Query Intent
+    const intentPrompt = ChatPromptTemplate.fromTemplate(
+      `Analyze the following query and classify it into one of the following categories:
+      - "specific_model" if it mentions a specific model name clearly (e.g., "Tell me about IBM WatsonX").
+      - "list_request" if it asks for a general list or ranking of models (e.g., "top 10 ML models").
+      - "comparison" if it asks to compare multiple models.
+      - "general_summary" if it seeks an overview of AI/ML platforms.
 
-    if (!platformData) {
-      return res.status(404).json({ error: "Platform not found" });
+      Query: "${query}"
+      Intent:`
+    );
+
+    const intentParser = new StringOutputParser();
+    const intentChain = intentPrompt.pipe(openai).pipe(intentParser);
+    const intentResponse = await intentChain.invoke({ query });
+    let intent = intentResponse.trim();
+
+    // Step 2: Load CSV data
+    const loader = new CSVLoader(`./data/merged_ratings.csv`);
+    const docs = await loader.load();
+
+    // Step 3: Check if the query directly matches a model in the CSV for specific_model intent
+    let matchingDocs;
+    if (intent === "specific_model") {
+      matchingDocs = docs.filter((doc) =>
+        doc.pageContent.toLowerCase().includes(query.toLowerCase())
+      );
+
+      // If no exact match, fall back to list request or general summary
+      if (matchingDocs.length === 0) {
+        matchingDocs = docs;
+        intent = "list_request";
+      }
+    } else if (intent === "list_request") {
+      matchingDocs = docs.slice(0, 10); // Example: fetch top 10 models
+    } else if (intent === "comparison") {
+      const modelsInQuery = query.split(" ").filter((word) => word.length > 3); // Extract possible model names
+      matchingDocs = docs.filter((doc) =>
+        modelsInQuery.some((model) =>
+          doc.pageContent.toLowerCase().includes(model.toLowerCase())
+        )
+      );
+    } else {
+      matchingDocs = docs; // Default for "general_summary" or unspecified intent
     }
+
+    if (!matchingDocs || matchingDocs.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "No matching documents found in CSV data" });
+    }
+
+    // Step 4: Prepare Content and Fetch Reddit Summary
+    const promptContent = matchingDocs
+      .map((doc) => doc.pageContent)
+      .join("\n\n");
+    const redditSummary = await fetchAndSummarizeRedditReviews(query);
+
+    // Step 5: Construct Prompt Based on Intent
+    const promptTemplate =
+      intent === "list_request"
+        ? `List the top AI/ML platforms based on the information below, with brief descriptions:\n\n${promptContent}`
+        : intent === "comparison"
+        ? `Compare the following AI/ML platforms based on the information below:\n\n${promptContent}`
+        : `Generate a detailed summary for the AI/ML platform described below:\n\nInformation:\n${promptContent}\n\nReddit Summary:\n${redditSummary}`;
+
+    const prompt = ChatPromptTemplate.fromTemplate(promptTemplate);
+    const parser = new StringOutputParser();
+    const chain = prompt.pipe(openai).pipe(parser);
 
     res.writeHead(200, {
       "Content-Type": "text/event-stream",
@@ -34,41 +100,18 @@ export const searchCsvController = async (req: Request, res: Response) => {
       Connection: "keep-alive",
     });
 
-    // Fetch and summarize Reddit reviews
-    const redditSummary = await fetchAndSummarizeRedditReviews(query);
-
-    const stream = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an AI assistant that generates summaries for AI/ML platforms.",
-        },
-        {
-          role: "user",
-          content: `
-          Generate a one-page summary for the AI/ML platform described below:
-          
-          Name: ${platformData["What is the name of this AI/ML software platform?"]}
-          Features: ${platformData["What are the features of this platform?"]}
-          Key Differentiators: ${platformData["What are the key differentiators of this platform?"]}
-          Client Industries: ${platformData["Which client industries are using this platform?"]}
-          Pricing Information: ${platformData["What is the pricing information for this platform?"]}
-          Deployment Options: ${platformData["What are the deployment options for this platform?"]}
-          Customer Reviews and Ratings: ${platformData["What are the customer reviews and ratings of this platform?"]}
-          Reddit Summary: ${redditSummary}
-        `,
-        },
-      ],
-      stream: true,
-    });
-
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      res.write(`data: ${JSON.stringify({ content })}\n\n`);
+    // Stream response content
+    for await (const event of chain.streamEvents(
+      { query },
+      { version: "v2" }
+    )) {
+      if (event.event === "on_chat_model_stream") {
+        const chunkContent = event.data.chunk?.content || "";
+        res.write(`data: ${JSON.stringify({ content: chunkContent })}\n\n`);
+      }
     }
 
+    // Finalize the stream
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (error) {

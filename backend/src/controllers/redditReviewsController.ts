@@ -27,7 +27,7 @@ export async function fetchRedditLinks(query: string): Promise<string[]> {
         ?.filter((item) => item.link && item.link.includes("reddit.com"))
         .map((item) => item.link as string) || [];
 
-    return redditLinks.slice(0, 3);
+    return redditLinks.slice(0, 1);
   } catch (error) {
     console.error("Error fetching Reddit links:", error);
     return [];
@@ -43,7 +43,7 @@ export async function summarizeRedditContent(urls: string[]): Promise<string> {
       const redditData = await axios.get(`${url}.json`);
       const comments = redditData.data[1].data.children
         .map((child: any) => child.data.body)
-        .slice(0, 5)
+        .slice(0, 3)
         .join("\n");
 
       combinedContent += comments + "\n";
@@ -70,9 +70,6 @@ export async function summarizeRedditContent(urls: string[]): Promise<string> {
 
     max_tokens: 500,
   });
-
-  console.log(summaryResponse.choices[0].message.content);
-
   return summaryResponse.choices[0].message.content || "No summary available.";
 }
 
